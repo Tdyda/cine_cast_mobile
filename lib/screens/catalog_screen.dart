@@ -55,6 +55,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
         },
       );
 
+      print('RESPONSE KATALOG: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         setState(() {
           movies = response.data['movies']['\$values'] ?? [];
@@ -143,15 +145,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
   @override
   Widget build(BuildContext context) {
     // Zamiast używać widget.isUserLoggedIn, użyj AuthProvider
-    final isUserLoggedIn = Provider.of<AuthProvider>(context).isUserLoggedIn;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Strona główna'),
+        title: const Text('Katalog filmów'),
       ),
-      drawer: Navigation(
-        isUserLoggedIn: isUserLoggedIn,
-      ),
+      drawer: Navigation(),
       body: Column(
         children: [
           if (loading) const CircularProgressIndicator(),

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,51 +12,26 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _errorMessage;
-
-  // Funkcja do zapisywania tokenu w shared_preferences
-  Future<void> _saveToken(
-      String token, String refreshToken, String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
-    await prefs.setString('refreshToken', refreshToken);
-    await prefs.setString('userId', userId);
-  }
-
-  static Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
-  }
+  bool _isLoading = false;
 
   Future<void> _handleLogin() async {
-    final apiService = Provider.of<ApiService>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     setState(() {
       _errorMessage = null;
+      _isLoading = true;
     });
 
-    final String email = _emailController.text;
-    final String password = _passwordController.text;
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
 
     try {
-      final response = await apiService.postRequest(
-        '/Account/login', // endpoint
-        {
-          'email': email,
-          'password': password,
-        },
-      );
-      
-      if (response.statusCode == 200) {
-        
-        final data = response.data;
-        print(response.data);
-        await _saveToken(
-          data['token'],
-          data['refreshToken'],
-          data['userId'],
-        );
-        
-        Navigator.pushReplacementNamed(context, '/');
+      // Wywołanie login z AuthProvider
+      final success = await authProvider.login(email, password);
+
+      if (success) {
+        // Po udanym logowaniu przekierowanie do katalogu
+        Navigator.pushReplacementNamed(context, '/catalog');
       } else {
         setState(() {
           _errorMessage = 'Błędny e-mail lub hasło';
@@ -67,6 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (err) {
       setState(() {
         _errorMessage = 'Wystąpił błąd. Spróbuj ponownie.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
       });
     }
   }
@@ -77,8 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: const Color.fromRGBO(35, 31, 31, 1),
       body: Center(
         child: Container(
-          width: double
-              .infinity, // Ustawienie szerokości na 100% dostępnej przestrzeni
+          width: double.infinity,
           height: 600,
           padding: EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -88,14 +64,14 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 'Logowanie',
                 style: TextStyle(fontSize: 24, color: Colors.white),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: _emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   labelStyle: TextStyle(color: Colors.white),
                   enabledBorder: OutlineInputBorder(
@@ -105,13 +81,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide(color: Colors.white, width: 2),
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.emailAddress,
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               TextField(
                 controller: _passwordController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Hasło',
                   labelStyle: TextStyle(color: Colors.white),
                   enabledBorder: OutlineInputBorder(
@@ -121,32 +97,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide(color: Colors.white, width: 2),
                   ),
                 ),
-                style: TextStyle(color: const Color.fromRGBO(255, 255, 255, 1)),
+                style: const TextStyle(color: Colors.white),
                 obscureText: true,
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               if (_errorMessage != null)
                 Text(
                   _errorMessage!,
-                  style: TextStyle(color: const Color.fromRGBO(229, 9, 20, 1)),
+                  style: const TextStyle(color: Colors.red),
                 ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               ElevatedButton(
-                onPressed: _handleLogin,
+                onPressed: _isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromRGBO(229, 9, 20, 1),
-                  padding: EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  fixedSize: Size(400, 44),
+                  fixedSize: const Size(400, 44),
                 ),
-                child: Text(
-                  'Zaloguj się',
-                  style:
-                      TextStyle(color: const Color.fromRGBO(255, 255, 255, 1)),
-                ),
-              )
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Zaloguj się',
+                        style: TextStyle(color: Colors.white),
+                      ),
+              ),
             ],
           ),
         ),

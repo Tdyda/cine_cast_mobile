@@ -31,31 +31,37 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         NavigationDelegate(
           onPageFinished: (url) async {
             // Wstrzykujemy token w JavaScript do localStorage
-            print('TOKEN ${widget.token}');
             _controller.runJavaScript("""
-              console.log('Executing token injection script...');
-              var tokenSet = localStorage.getItem('tokenSet');
+              console.log('Executing token validation and injection script...');
               
-              // Resetowanie tokenSet po określonym czasie (np. 24 godziny)
-              var lastSetTime = localStorage.getItem('tokenSetTime');
+              // Pobierz token z localStorage
+              var token = localStorage.getItem('token');
+              
+              var tokenExpiry = localStorage.getItem('token_expiry');
               var currentTime = new Date().getTime();
               
-              if (lastSetTime && currentTime - lastSetTime > 86400000) {  // 600000 ms = 10min
-                localStorage.setItem('tokenSet', 'false');
-                console.log('TokenSet expired, resetting.');
-              }
-
-              // Ustawiamy nowy token tylko, jeśli tokenSet jest false
-              if (!localStorage.getItem('tokenSet')) {
+              console.log('Current time:', currentTime);
+              console.log('Token expiry time:', tokenExpiry);
+              
+              if (!token || !tokenExpiry || currentTime > parseInt(tokenExpiry)) {
+                console.log('Token is either invalid or expired. Setting a new token...');
+                
+                // Ustaw nowy token
                 localStorage.setItem('token', '${widget.token}');
-                localStorage.setItem('tokenSet', 'true');
-                localStorage.setItem('tokenSetTime', currentTime.toString());  // Ustawiamy czas ustawienia tokena
-                console.log('Token set:', localStorage.getItem('token'));
-                window.location.reload();
+                
+                // Ustaw czas wygaśnięcia tokenu (np. 24 godziny od teraz)
+                var expiryTimestamp = currentTime + 600000;  // 10min w ms
+                localStorage.setItem('token_expiry', expiryTimestamp.toString());
+
+                // Logowanie tokena i daty wygaśnięcia
+                console.log('New token set:', localStorage.getItem('token'));
+                console.log('New token expiry time:', localStorage.getItem('token_expiry'));
+                
               } else {
-                console.log('Token already set, skipping injection.');
+                console.log('Token is valid, no need to set a new one.');
               }
             """);
+
 
           },
         ),

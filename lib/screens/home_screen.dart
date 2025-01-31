@@ -110,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Strona główna'),
       ),
       drawer: Navigation(
-        isUserLoggedIn: widget.isUserLoggedIn,
+        // isUserLoggedIn: widget.isUserLoggedIn,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
