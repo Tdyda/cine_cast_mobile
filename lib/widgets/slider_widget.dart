@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../screens/video_player_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 
 
 class SliderWidget extends StatelessWidget {
@@ -19,7 +20,7 @@ class SliderWidget extends StatelessWidget {
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token'); // Zwracamy token zapisany w SharedPreferences
+    return prefs.getString('token');
   }
 
   @override

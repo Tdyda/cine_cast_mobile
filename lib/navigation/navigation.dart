@@ -56,7 +56,7 @@ class Navigation extends StatelessWidget {
               },
             ),
           ],
-          // if (isUserLoggedIn) ...[
+          if (isUserLoggedIn) ...[
             // Katalog filmów
             ListTile(
               leading: Icon(Icons.movie, color: Colors.white),
@@ -85,7 +85,7 @@ class Navigation extends StatelessWidget {
                     context, '/logout'); // Zamykanie Drawer + nawigacja
               },
             ),
-          // ],
+          ],
         ],
       ),
     );
