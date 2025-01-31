@@ -1,9 +1,6 @@
-// lib/navigation/app_routes.dart
-
 import 'package:flutter/material.dart';
 import 'package:cine_cast/screens/home_screen.dart';
 import 'package:cine_cast/screens/login_screen.dart';
-import 'package:cine_cast/screens/register_screen.dart';
 import 'package:cine_cast/screens/catalog_screen.dart';
 
 class AppRoutes {
@@ -12,16 +9,20 @@ class AppRoutes {
   static const String register = '/register';
   static const String catalog = '/catalog';
 
+  static final Map<String, Widget Function(BuildContext)> routes = {
+    home: (context) => const HomeScreen(),
+    login: (context) => LoginScreen(),
+    catalog: (context) => const CatalogScreen(),
+  };
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case login:
         return MaterialPageRoute(builder: (_) => LoginScreen());
-      case register:
-      //   return MaterialPageRoute(builder: (_) => const RegisterScreen());
-      // case catalog:
-      //   return MaterialPageRoute(builder: (_) => const CatalogScreen());
+      case catalog:
+        return MaterialPageRoute(builder: (_) => const CatalogScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

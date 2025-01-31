@@ -3,13 +3,19 @@ import 'package:cine_cast/services/api_service.dart';
 import 'package:cine_cast/widgets/slider_widget.dart';
 import 'package:cine_cast/models/movie.dart';
 import 'package:cine_cast/navigation/navigation.dart'; // Dodajemy import Navigation
+import '../services/api_service.dart';
+import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:flutter/services.dart'; // Do Image.memory
+import 'package:dio/dio.dart';
+
 
 class HomeScreen extends StatefulWidget {
-  final bool isAdmin;
   final bool isUserLoggedIn;
 
   const HomeScreen(
-      {Key? key, this.isAdmin = false, this.isUserLoggedIn = false})
+      {Key? key, this.isUserLoggedIn = false})
       : super(key: key);
 
   @override
@@ -18,8 +24,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Map<String, List<Movie>> moviesByCategory = {};
-  Map<String, String> thumbnails = {}; // Miniaturki filmów
-  Map<String, String> previews = {}; // Podglądy filmów
+  Map<String, String> thumbnails = {};
+  Map<String, String> previews = {};
   bool isLoading = false;
   String? errorMessage;
 
@@ -33,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> fetchMovies() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
     setState(() {
       isLoading = true;
       errorMessage = null;
@@ -41,36 +48,53 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       Map<String, List<Movie>> categoryMovies = {};
       for (String category in categories) {
-        final movies = await ApiService.fetchMoviesByCategory(category, limit);
-        if (movies.isNotEmpty) {
-          categoryMovies[category] = movies;
-        }
+        final apiService = Provider.of<ApiService>(context, listen: false);
+        final url = '/MoviesCatalog/tags?tags[]=$category';
+        final response = await apiService.getRequest(url);
+
+        if(response.statusCode == 200)
+        {
+          print('Odpowiedź OK: ${response.data}');
+
+          final movies = (response.data['\$values'] as List)
+            .map((movieJson) => Movie.fromJson(movieJson))
+            .toList();
+
+
+            print('Movies: $movies');
+
+            if (movies.isNotEmpty) {
+              categoryMovies[category] = movies;
+            }
+        }        
       }
 
       setState(() {
         moviesByCategory = categoryMovies;
       });
 
-      // Pobieranie miniaturek i podglądów
       for (var category in moviesByCategory.keys) {
         for (var movie in moviesByCategory[category]!) {
-          // Pobieramy miniaturkę
-          final thumbnail = await ApiService.fetchThumbnail(movie.title);
-          setState(() {
-            thumbnails[movie.title] = thumbnail;
-          });
+          final options = Options(responseType: ResponseType.bytes);
 
-          // Pobieramy podgląd
-          // final preview = await ApiService.fetchPreview(movie.title);
-          setState(() {
-            // previews[movie.title] = preview;
-          });
-          moviesByCategory.forEach((key, value) {});
+          final response = await apiService.getRequest(
+            '/MoviesCatalog/thumbnail/${movie.title}/thumbnail.jpg',
+            options: options,
+          );
+
+          if(response.statusCode == 200)
+          {
+            final Uint8List thumbnail = response.data;
+            setState(() {
+              movie.thumbnailUrl = "data:image/jpeg;base64," + base64Encode(thumbnail);
+            });
+            moviesByCategory.forEach((key, value) {});
+          }
         }
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Failed to load movies';
+        errorMessage = '$e';
       });
     } finally {
       setState(() {
@@ -87,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       drawer: Navigation(
         isUserLoggedIn: widget.isUserLoggedIn,
-        isAdmin: widget.isAdmin,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -111,8 +134,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             SliderWidget(
                               movies: moviesByCategory[category]!,
-                              isAdmin: widget.isAdmin,
-                              // thumbnails: thumbnails,
                               previews: previews,
                             ),
                           ],

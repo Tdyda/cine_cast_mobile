@@ -5,12 +5,10 @@ import 'package:cine_cast/navigation/app_routes.dart';
 
 class Navigation extends StatelessWidget {
   final bool isUserLoggedIn;
-  final bool isAdmin;
 
   const Navigation({
     Key? key,
     required this.isUserLoggedIn,
-    required this.isAdmin,
   }) : super(key: key);
 
   @override
@@ -58,7 +56,7 @@ class Navigation extends StatelessWidget {
               },
             ),
           ],
-          if (isUserLoggedIn) ...[
+          // if (isUserLoggedIn) ...[
             // Katalog filmów
             ListTile(
               leading: Icon(Icons.movie, color: Colors.white),
@@ -87,7 +85,7 @@ class Navigation extends StatelessWidget {
                     context, '/logout'); // Zamykanie Drawer + nawigacja
               },
             ),
-          ],
+          // ],
         ],
       ),
     );

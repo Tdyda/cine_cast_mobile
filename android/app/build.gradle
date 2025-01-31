@@ -7,6 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.cine_cast"
+
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

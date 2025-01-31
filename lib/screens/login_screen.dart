@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -22,7 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
     await prefs.setString('userId', userId);
   }
 
+  static Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
   Future<void> _handleLogin() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+
     setState(() {
       _errorMessage = null;
     });
@@ -31,29 +40,24 @@ class _LoginScreenState extends State<LoginScreen> {
     final String password = _passwordController.text;
 
     try {
-      final response = await http.post(
-        Uri.parse(
-            'https://doublecodestudio.pl:51821/videoService/api/Account/login'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
+      final response = await apiService.postRequest(
+        '/Account/login', // endpoint
+        {
           'email': email,
           'password': password,
-        }),
+        },
       );
-
+      
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        // Zapis tokenów w shared_preferences
+        
+        final data = response.data;
+        print(response.data);
         await _saveToken(
           data['token'],
           data['refreshToken'],
           data['userId'],
         );
-        print('Token: ${data['token']}');
-        print('RefreshToken: ${data['refreshToken']}');
-        print('UserId: ${data['userId']}');
+        
         Navigator.pushReplacementNamed(context, '/');
       } else {
         setState(() {
@@ -135,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  fixedSize: Size(400, 44), // Szerokość: 200, Wysokość: 50
+                  fixedSize: Size(400, 44),
                 ),
                 child: Text(
                   'Zaloguj się',
