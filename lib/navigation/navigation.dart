@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cine_cast/navigation/app_routes.dart';
 import 'package:cine_cast/providers/auth_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 
 class Navigation extends StatelessWidget {
   const Navigation({Key? key}) : super(key: key);
@@ -18,8 +20,8 @@ class Navigation extends StatelessWidget {
               DrawerHeader(
                 decoration: const BoxDecoration(color: Colors.black87),
                 child: Center(
-                  child: Image.asset(
-                    'assets/logo.png',
+                  child: SvgPicture.asset(
+                    'assets/images/logo.svg',
                     height: 50,
                   ),
                 ),
@@ -60,13 +62,13 @@ class Navigation extends StatelessWidget {
                   },
                 ),
                 // Kategorie
-                ListTile(
-                  leading: const Icon(Icons.category, color: Colors.white),
-                  title: const Text('Kategorie', style: TextStyle(color: Colors.white)),
-                  onTap: () {
-                    Navigator.pushReplacementNamed(context, '/tags');
-                  },
-                ),
+                // ListTile(
+                //   leading: const Icon(Icons.category, color: Colors.white),
+                //   title: const Text('Kategorie', style: TextStyle(color: Colors.white)),
+                //   onTap: () {
+                //     Navigator.pushReplacementNamed(context, '/tags');
+                //   },
+                // ),
                 // Wylogowanie
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.white),
